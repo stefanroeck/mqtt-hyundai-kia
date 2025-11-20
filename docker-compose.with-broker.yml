@@ -1,0 +1,96 @@
+# Complete Docker Compose with MQTT Broker
+# This includes both the Hyundai MQTT service and a Mosquitto broker
+# Perfect for testing without external MQTT setup
+
+version: '3.8'
+
+services:
+  # Hyundai MQTT Integration Service
+  hyundai-mqtt:
+    # Use the image built and published via GitHub Actions
+    image: ghcr.io/pigmej/mqtt-hyundai-kia:latest
+    
+    container_name: hyundai-mqtt
+    restart: unless-stopped
+    
+    # Environment variables - replace with your actual credentials
+    environment:
+      # Required: Hyundai/Kia/Genesis credentials
+      - HYUNDAI_USERNAME=your_email@example.com
+      - HYUNDAI_PASSWORD=your_password
+      - HYUNDAI_PIN=your_vehicle_pin
+      
+      # Required: Point to the Mosquitto service below
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=1883
+      
+      # Optional: Hyundai API configuration
+      - HYUNDAI_REGION=1        # 1=Europe, 2=Canada, 3=USA
+      - HYUNDAI_BRAND=1         # 1=Hyundai, 2=Kia, 3=Genesis
+      
+      # Optional: Application configuration
+      - LOG_LEVEL=INFO          # DEBUG, INFO, WARNING, ERROR
+      - INITIAL_REFRESH=true     # Load cached data on startup
+      - REFRESH_INTERVAL=60     # Default refresh interval in seconds
+      - MQTT_BASE_TOPIC=hyundai # Base topic for MQTT messages
+    
+    # Wait for Mosquitto to be healthy before starting
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+        required: true
+    
+    # Connect to the MQTT network
+    networks:
+      - mqtt-network
+    
+    # Mount /tmp for health check file
+    volumes:
+      - /tmp:/tmp
+
+  # Mosquitto MQTT Broker
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mosquitto
+    restart: unless-stopped
+    
+    # Expose MQTT ports to host
+    ports:
+      - "1883:1883"   # Standard MQTT port
+      - "9001:9001"   # WebSocket port (optional)
+    
+    # Mount configuration file
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+    
+    # Health check to ensure broker is running
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-h", "localhost", "-t", "test", "-m", "health_check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # Connect to the MQTT network
+    networks:
+      - mqtt-network
+
+# Network configuration
+networks:
+  mqtt-network:
+    name: hyundai_mqtt_mqtt-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Persistent volumes for Mosquitto
+volumes:
+  mosquitto_data:
+    name: hyundai_mqtt_mosquitto_data
+    driver: local
+  mosquitto_logs:
+    name: hyundai_mqtt_mosquitto_logs
+    driver: local
