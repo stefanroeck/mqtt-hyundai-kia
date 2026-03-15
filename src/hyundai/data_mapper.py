@@ -345,7 +345,7 @@ def map_climate_data(vehicle: Any) -> ClimateData:
 def map_location_data(vehicle: Any) -> LocationData:
     """Extract location data from vehicle object."""
     location = getattr(vehicle, 'location', None)
-    if location:
+    if location is not None and hasattr(location, 'latitude') and hasattr(location, 'longitude'):
         return LocationData(
             latitude=getattr(location, 'latitude', None),
             longitude=getattr(location, 'longitude', None),
@@ -355,6 +355,14 @@ def map_location_data(vehicle: Any) -> LocationData:
             address=getattr(location, 'address', None),
             place_name=getattr(location, 'place_name', None),
             last_updated=getattr(location, 'last_updated', None),
+        )
+    ## Fallback to top-level attributes if location object is not available
+    location_lat = getattr(vehicle, '_location_latitude', None)
+    location_lon = getattr(vehicle, '_location_longitude', None)
+    if location_lat is not None and location_lon is not None:
+        return LocationData(
+            latitude=location_lat,
+            longitude=location_lon,
         )
     return LocationData()
 
