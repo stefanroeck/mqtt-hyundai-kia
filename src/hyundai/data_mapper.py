@@ -201,6 +201,24 @@ class EngineData:
 
 
 @dataclass
+class DailyDrivingStats:
+    """Daily energy/distance consumption stats."""
+    date: datetime
+    total_consumed: Optional[float] = None
+    engine_consumption: Optional[float] = None
+    climate_consumption: Optional[float] = None
+    onboard_electronics_consumption: Optional[float] = None
+    battery_care_consumption: Optional[float] = None
+    regenerated_energy: Optional[float] = None
+    distance: Optional[float] = None
+    distance_unit: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary, excluding None values."""
+        return {k: v for k, v in asdict(self).items() if v is not None}
+
+
+@dataclass
 class VehicleData:
     """Complete vehicle data payload with all systems."""
     vehicle_id: str
@@ -215,6 +233,7 @@ class VehicleData:
     tires: TireData = field(default_factory=lambda: TireData())
     service: ServiceData = field(default_factory=lambda: ServiceData())
     engine: EngineData = field(default_factory=lambda: EngineData())
+    daily_stats: List[DailyDrivingStats] = field(default_factory=list)
     # EU-specific power consumption metrics
     total_power_consumed: Optional[float] = None  # Wh
     total_power_regenerated: Optional[float] = None  # Wh
@@ -267,6 +286,15 @@ class VehicleData:
         
         if self.odometer is not None:
             messages.append(("status/odometer", self.odometer))
+
+        # Daily driving stats (publish per day as a nested topic)
+        for stat in self.daily_stats:
+            # Use date-only key (YYYY-MM-DD) to avoid invalid topic characters
+            date_key = stat.date.date().isoformat() if isinstance(stat.date, datetime) else str(stat.date)
+            stat_dict = stat.to_dict()
+            stat_dict.pop("date", None)
+            for key, value in stat_dict.items():
+                messages.append((f"status/daily/{date_key}/{key}", value))
 
         # Status data
         status_dict = self.status.to_dict()
@@ -413,6 +441,32 @@ def map_eu_power_consumption(vehicle: Any) -> Tuple[Optional[float], Optional[fl
     )
 
 
+def map_daily_stats(vehicle: Any) -> List[DailyDrivingStats]:
+    """Extract daily driving stats from Hyundai API vehicle model."""
+    daily_stats: List[DailyDrivingStats] = []
+    raw_daily_stats = getattr(vehicle, '_daily_stats', None)
+    if not raw_daily_stats:
+        return daily_stats
+
+    for item in raw_daily_stats:
+        date_val = getattr(item, 'date', None)
+        if date_val is None:
+            continue
+        daily_stats.append(DailyDrivingStats(
+            date=date_val,
+            total_consumed=getattr(item, 'total_consumed', None),
+            engine_consumption=getattr(item, 'engine_consumption', None),
+            climate_consumption=getattr(item, 'climate_consumption', None),
+            onboard_electronics_consumption=getattr(item, 'onboard_electronics_consumption', None),
+            battery_care_consumption=getattr(item, 'battery_care_consumption', None),
+            regenerated_energy=getattr(item, 'regenerated_energy', None),
+            distance=getattr(item, 'distance', None),
+            distance_unit=getattr(item, 'distance_unit', None),
+        ))
+
+    return daily_stats
+
+
 def map_vehicle_data(vehicle: Any, data_source: str, update_method: str) -> VehicleData:
     """Map complete vehicle data to VehicleData model."""
     total_consumed, total_regen, consumption_30d = map_eu_power_consumption(vehicle)
@@ -433,6 +487,7 @@ def map_vehicle_data(vehicle: Any, data_source: str, update_method: str) -> Vehi
         tires=map_tire_data(vehicle),
         service=map_service_data(vehicle),
         engine=map_engine_data(vehicle),
+        daily_stats=map_daily_stats(vehicle),
         total_power_consumed=total_consumed,
         total_power_regenerated=total_regen,
         power_consumption_30d=consumption_30d,
