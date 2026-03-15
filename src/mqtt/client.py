@@ -180,56 +180,60 @@ class MQTTClient:
             for metric_path, value in messages:
                 # Build full topic
                 parts = metric_path.split("/")
-                if len(parts) == 2:
-                    category, metric = parts
-                    if category == "battery":
-                        topic = self.topic_manager.battery_topic(vehicle_data.vehicle_id, metric)
-                    elif category == "ev":
-                        topic = self.topic_manager.ev_topic(vehicle_data.vehicle_id, metric)
-                    elif category == "status":
-                        topic = self.topic_manager.status_topic(vehicle_data.vehicle_id, metric)
-                    elif category == "doors":
-                        topic = self.topic_manager.door_topic(vehicle_data.vehicle_id, metric)
-                    elif category == "windows":
-                        topic = self.topic_manager.window_topic(vehicle_data.vehicle_id, metric)
-                    elif category == "climate":
-                        topic = self.topic_manager.climate_topic(vehicle_data.vehicle_id, metric)
-                    elif category == "location":
-                        topic = self.topic_manager.location_topic(vehicle_data.vehicle_id, metric)
-                    elif category == "tires":
-                        topic = self.topic_manager.tire_topic(vehicle_data.vehicle_id, metric)
-                    elif category == "service":
-                        topic = self.topic_manager.service_topic(vehicle_data.vehicle_id, metric)
-                    elif category == "engine":
-                        topic = self.topic_manager.engine_topic(vehicle_data.vehicle_id, metric)
-                    else:
-                        continue
-                    
-                    # Get topic configuration
-                    config = TOPIC_CONFIG.get(metric_path, {"qos": 0, "retain": False})
-                    
-                    # Format message
-                    if metric_path.startswith("status/"):
-                        # Status messages are already in string format
-                        payload = json.dumps({"value": value, "timestamp": vehicle_data.status.last_updated.isoformat() + "Z"})
-                    else:
-                        unit = config.get("unit")
-                        payload = self.topic_manager.format_message(
-                            value,
-                            unit=unit,
-                            timestamp=vehicle_data.status.last_updated
-                        )
-                    
-                    # Publish
-                    result = self.client.publish(
-                        topic,
-                        payload,
-                        qos=config.get("qos", 0),
-                        retain=config.get("retain", False)
+                if len(parts) < 2:
+                    continue
+
+                category = parts[0]
+                metric = "/".join(parts[1:])
+
+                if category == "battery":
+                    topic = self.topic_manager.battery_topic(vehicle_data.vehicle_id, metric)
+                elif category == "ev":
+                    topic = self.topic_manager.ev_topic(vehicle_data.vehicle_id, metric)
+                elif category == "status":
+                    topic = self.topic_manager.status_topic(vehicle_data.vehicle_id, metric)
+                elif category == "doors":
+                    topic = self.topic_manager.door_topic(vehicle_data.vehicle_id, metric)
+                elif category == "windows":
+                    topic = self.topic_manager.window_topic(vehicle_data.vehicle_id, metric)
+                elif category == "climate":
+                    topic = self.topic_manager.climate_topic(vehicle_data.vehicle_id, metric)
+                elif category == "location":
+                    topic = self.topic_manager.location_topic(vehicle_data.vehicle_id, metric)
+                elif category == "tires":
+                    topic = self.topic_manager.tire_topic(vehicle_data.vehicle_id, metric)
+                elif category == "service":
+                    topic = self.topic_manager.service_topic(vehicle_data.vehicle_id, metric)
+                elif category == "engine":
+                    topic = self.topic_manager.engine_topic(vehicle_data.vehicle_id, metric)
+                else:
+                    continue
+
+                # Get topic configuration
+                config = TOPIC_CONFIG.get(metric_path, {"qos": 0, "retain": False})
+
+                # Format message
+                if metric_path.startswith("status/"):
+                    # Status messages are already in string format
+                    payload = json.dumps({"value": value, "timestamp": vehicle_data.status.last_updated.isoformat() + "Z"})
+                else:
+                    unit = config.get("unit")
+                    payload = self.topic_manager.format_message(
+                        value,
+                        unit=unit,
+                        timestamp=vehicle_data.status.last_updated
                     )
-                    
-                    if result.rc != mqtt.MQTT_ERR_SUCCESS:
-                        logger.warning(f"Failed to publish to {topic}: {result.rc}")
+
+                # Publish
+                result = self.client.publish(
+                    topic,
+                    payload,
+                    qos=config.get("qos", 0),
+                    retain=config.get("retain", False)
+                )
+
+                if result.rc != mqtt.MQTT_ERR_SUCCESS:
+                    logger.warning(f"Failed to publish to {topic}: {result.rc}")
             
             logger.info(f"Successfully published data for vehicle {vehicle_data.vehicle_id}")
             
