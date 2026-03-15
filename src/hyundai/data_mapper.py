@@ -33,6 +33,7 @@ class BatteryData:
     charging_status: Optional[str] = None  # "charging", "not_charging", etc.
     plug_status: Optional[str] = None  # "connected", "disconnected"
     temperature: Optional[float] = None  # Battery temperature in Celsius
+    charging_power: Optional[float] = None  # Current charging power in kW
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary, excluding None values."""
@@ -218,6 +219,7 @@ class VehicleData:
     total_power_consumed: Optional[float] = None  # Wh
     total_power_regenerated: Optional[float] = None  # Wh
     power_consumption_30d: Optional[float] = None  # Wh
+    odometer: Optional[float] = None  # km or mi
 
     def to_mqtt_messages(self) -> List[Tuple[str, Union[str, int, float, Dict]]]:
         """Convert to list of (metric_name, data) tuples for MQTT publishing."""
@@ -263,6 +265,9 @@ class VehicleData:
         if self.power_consumption_30d is not None:
             messages.append(("ev/power_consumption_30d", self.power_consumption_30d))
         
+        if self.odometer is not None:
+            messages.append(("status/odometer", self.odometer))
+
         # Status data
         status_dict = self.status.to_dict()
         for key, value in status_dict.items():
@@ -281,7 +286,8 @@ def map_battery_data(vehicle: Any) -> BatteryData:
         plug_status=_map_plug_status(
             getattr(vehicle, 'ev_battery_is_plugged_in', None)
         ),
-        temperature=getattr(vehicle, 'ev_battery_temperature', None)
+        temperature=getattr(vehicle, 'ev_battery_temperature', None),
+        charging_power=getattr(vehicle, 'ev_charging_power', None)
     )
 
 
@@ -357,8 +363,8 @@ def map_location_data(vehicle: Any) -> LocationData:
             last_updated=getattr(location, 'last_updated', None),
         )
     ## Fallback to top-level attributes if location object is not available
-    location_lat = getattr(vehicle, '_location_latitude', None)
-    location_lon = getattr(vehicle, '_location_longitude', None)
+    location_lat = getattr(vehicle, 'location_latitude', None)
+    location_lon = getattr(vehicle, 'location_longitude', None)
     if location_lat is not None and location_lon is not None:
         return LocationData(
             latitude=location_lat,
@@ -430,6 +436,7 @@ def map_vehicle_data(vehicle: Any, data_source: str, update_method: str) -> Vehi
         total_power_consumed=total_consumed,
         total_power_regenerated=total_regen,
         power_consumption_30d=consumption_30d,
+        odometer=getattr(vehicle, 'odometer', None)
     )
 
 
