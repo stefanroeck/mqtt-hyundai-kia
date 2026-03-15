@@ -39,7 +39,7 @@ def redact_sensitive(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def get_logger(name: str, level: str = "INFO") -> logging.Logger:
+def get_logger(name: str, level: str = "NOTSET") -> logging.Logger:
     """Get configured logger instance."""
     logger = logging.getLogger(name)
     logger.setLevel(getattr(logging, level.upper()))
