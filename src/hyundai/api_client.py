@@ -96,9 +96,12 @@ class HyundaiAPIClient:
     async def _is_token_expired_error(self, error: Exception) -> bool:
         """Check if error indicates token expiration."""
         error_str = str(error).lower()
+        # Hyundai's API has returned both "token is expired" and "token has expired".
         return any(keyword in error_str for keyword in [
             "token is expired",
+            "token has expired",
             "key not authorized: token is expired",
+            "key not authorized: token has expired",
             "authentication failed",
             "unauthorized"
         ])
