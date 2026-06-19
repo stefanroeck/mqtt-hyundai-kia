@@ -151,8 +151,8 @@ class HyundaiAPIClient:
             )
 
             self.vehicle_manager = VehicleManager(
-                region=self.config.region,
-                brand=self.config.brand,
+                region=int(self.config.region),
+                brand=int(self.config.brand),
                 username=self.config.username,
                 password=self.config.password,
                 pin=self.config.pin,

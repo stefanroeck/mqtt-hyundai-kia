@@ -5,7 +5,7 @@ description = "MQTT-driven integration with Hyundai Bluelink API for battery/EV 
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "hyundai-kia-connect-api>=3.0.0",
+    "hyundai-kia-connect-api>=4.18.0",
     "paho-mqtt>=1.6.1",
     "python-dotenv>=1.0.0",
 ]

@@ -28,7 +28,7 @@ services:
       
       # Optional: Hyundai API configuration
       - HYUNDAI_REGION=1        # 1=Europe, 2=Canada, 3=USA
-      - HYUNDAI_BRAND=1         # 1=Hyundai, 2=Kia, 3=Genesis
+      - HYUNDAI_BRAND=2         # 1=Kia, 2=Hyundai, 3=Genesis
       
       # Optional: MQTT authentication (if your broker requires it)
       # - MQTT_USERNAME=your_mqtt_username

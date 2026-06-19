@@ -21,10 +21,60 @@ class Region(IntEnum):
 
 
 class Brand(IntEnum):
-    """Supported brands."""
-    HYUNDAI = 1
-    KIA = 2
+    """Supported brands from hyundai_kia_connect_api."""
+    KIA = 1
+    HYUNDAI = 2
     GENESIS = 3
+
+
+def _parse_region(value: str) -> Region:
+    """Parse a region from either the upstream numeric code or a name."""
+    normalized = value.strip().upper().replace(" ", "_").replace("-", "_")
+    aliases = {
+        "EU": Region.EUROPE,
+        "EUROPE": Region.EUROPE,
+        "CA": Region.CANADA,
+        "CANADA": Region.CANADA,
+        "US": Region.USA,
+        "USA": Region.USA,
+        "UNITED_STATES": Region.USA,
+        "CN": Region.CHINA,
+        "CHINA": Region.CHINA,
+        "AU": Region.AUSTRALIA,
+        "AUSTRALIA": Region.AUSTRALIA,
+        "IN": Region.INDIA,
+        "INDIA": Region.INDIA,
+        "NZ": Region.NEW_ZEALAND,
+        "NEW_ZEALAND": Region.NEW_ZEALAND,
+        "BRAZIL": Region.BRAZIL,
+        "BR": Region.BRAZIL,
+    }
+
+    if normalized in aliases:
+        return aliases[normalized]
+
+    try:
+        return Region(int(value))
+    except (ValueError, KeyError) as e:
+        raise ValueError(f"Unsupported Hyundai region '{value}'") from e
+
+
+def _parse_brand(value: str) -> Brand:
+    """Parse a brand from either the upstream numeric code or a name."""
+    normalized = value.strip().upper().replace(" ", "_").replace("-", "_")
+    aliases = {
+        "KIA": Brand.KIA,
+        "HYUNDAI": Brand.HYUNDAI,
+        "GENESIS": Brand.GENESIS,
+    }
+
+    if normalized in aliases:
+        return aliases[normalized]
+
+    try:
+        return Brand(int(value))
+    except (ValueError, KeyError) as e:
+        raise ValueError(f"Unsupported Hyundai brand '{value}'") from e
 
 
 @dataclass
@@ -51,9 +101,9 @@ class HyundaiConfig:
             raise ConfigurationError("Missing required Hyundai credentials (HYUNDAI_USERNAME, HYUNDAI_PASSWORD, HYUNDAI_PIN)")
         
         try:
-            region = Region(int(os.getenv("HYUNDAI_REGION", "1")))
-            brand = Brand(int(os.getenv("HYUNDAI_BRAND", "1")))
-        except (ValueError, KeyError) as e:
+            region = _parse_region(os.getenv("HYUNDAI_REGION", "1"))
+            brand = _parse_brand(os.getenv("HYUNDAI_BRAND", "hyundai"))
+        except ValueError as e:
             raise ConfigurationError(f"Invalid region or brand configuration: {e}")
         
         return HyundaiConfig(

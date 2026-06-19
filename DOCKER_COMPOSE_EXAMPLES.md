@@ -69,7 +69,7 @@ docker inspect --format='{{.Name}}: {{.State.Health.Status}}' hyundai-mqtt
 
 ### Optional Variables
 - `HYUNDAI_REGION`: 1=Europe, 2=Canada, 3=USA (default: 1)
-- `HYUNDAI_BRAND`: 1=Hyundai, 2=Kia, 3=Genesis (default: 1)
+- `HYUNDAI_BRAND`: 1=Kia, 2=Hyundai, 3=Genesis (default: hyundai)
 - `MQTT_BROKER_PORT`: MQTT broker port (default: 1883)
 - `MQTT_USERNAME`: MQTT authentication username (optional)
 - `MQTT_PASSWORD`: MQTT authentication password (optional)
@@ -140,7 +140,7 @@ HYUNDAI_USERNAME=your_email@example.com
 HYUNDAI_PASSWORD=your_password
 HYUNDAI_PIN=1234
 HYUNDAI_REGION=1
-HYUNDAI_BRAND=1
+HYUNDAI_BRAND=2
 
 # MQTT Configuration
 MQTT_BROKER_HOST=your_mqtt_broker

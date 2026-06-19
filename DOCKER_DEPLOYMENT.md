@@ -14,7 +14,7 @@ docker run -d \
   -e HYUNDAI_PASSWORD=your_password \
   -e HYUNDAI_PIN=your_pin \
   -e HYUNDAI_REGION=1 \
-  -e HYUNDAI_BRAND=1 \
+  -e HYUNDAI_BRAND=2 \
   -e MQTT_BROKER_HOST=your_mqtt_broker \
   -e MQTT_BROKER_PORT=1883 \
   ghcr.io/yourusername/hyundai-mqtt:latest

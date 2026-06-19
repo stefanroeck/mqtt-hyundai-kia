@@ -35,7 +35,7 @@ docker run -d \
   -e HYUNDAI_PASSWORD=your_password \
   -e HYUNDAI_PIN=your_pin \
   -e HYUNDAI_REGION=1 \
-  -e HYUNDAI_BRAND=1 \
+  -e HYUNDAI_BRAND=2 \
   -e MQTT_BROKER_HOST=your_mqtt_broker \
   -e MQTT_BROKER_PORT=1883 \
   ghcr.io/yourusername/hyundai-mqtt:latest
@@ -59,7 +59,7 @@ docker run -d \
   -e HYUNDAI_PASSWORD=your_password \
   -e HYUNDAI_PIN=your_pin \
   -e HYUNDAI_REGION=1 \
-  -e HYUNDAI_BRAND=1 \
+  -e HYUNDAI_BRAND=2 \
   -e MQTT_BROKER_HOST=your_mqtt_broker \
   hyundai-mqtt
 ```
@@ -123,7 +123,7 @@ The service can be configured via environment variables. These work for both Doc
 ```bash
 # Hyundai API Configuration
 HYUNDAI_REGION=1        # 1=Europe, 2=Canada, 3=USA, etc.
-HYUNDAI_BRAND=1         # 1=Hyundai, 2=Kia, 3=Genesis
+HYUNDAI_BRAND=2         # 1=Kia, 2=Hyundai, 3=Genesis
 
 # MQTT Configuration
 MQTT_BROKER_PORT=1883   # MQTT broker port
@@ -153,7 +153,7 @@ HYUNDAI_USERNAME=your_email@example.com
 HYUNDAI_PASSWORD=your_password
 HYUNDAI_PIN=your_pin
 HYUNDAI_REGION=1  # 1=Europe, 2=Canada, 3=USA, etc.
-HYUNDAI_BRAND=1   # 1=Hyundai, 2=Kia, 3=Genesis
+HYUNDAI_BRAND=2   # 1=Kia, 2=Hyundai, 3=Genesis
 
 # MQTT Configuration
 MQTT_BROKER_HOST=localhost
@@ -178,8 +178,8 @@ INITIAL_REFRESH=true
 
 ### Brand Codes
 
-- 1 = Hyundai
-- 2 = Kia
+- 1 = Kia
+- 2 = Hyundai
 - 3 = Genesis
 
 ## Usage

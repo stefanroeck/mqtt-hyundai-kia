@@ -4,7 +4,7 @@
 import asyncio
 import logging
 import sys
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import datetime
 
 # Add the src directory to the Python path
@@ -25,7 +25,8 @@ def setup_logging():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 
-async def test_token_refresh_mechanism():
+
+async def run_token_refresh_mechanism():
     """Test the token refresh and retry mechanism."""
     print("Testing token refresh and retry mechanism...")
     
@@ -132,7 +133,8 @@ async def test_token_refresh_mechanism():
     
     print("\nToken refresh and retry mechanism tests completed!")
 
-async def test_api_client_methods():
+
+async def run_api_client_methods():
     """Test that all API client methods have token refresh integration."""
     print("\nTesting API client methods with token refresh...")
     
@@ -264,6 +266,44 @@ def test_execute_with_retry_reauths_on_observed_message():
     mock_vm.check_and_refresh_token.assert_called_once()
 
 
+def test_hyundai_brand_uses_upstream_hyundai_code():
+    """Hyundai config must be passed to the upstream library as brand code 2."""
+    config = HyundaiConfig(
+        region=Region.EUROPE,
+        brand=Brand.HYUNDAI,
+        username="test@example.com",
+        password="test_password",
+        pin="1234"
+    )
+    client = HyundaiAPIClient(config)
+    manager = Mock()
+    manager.check_and_refresh_token = Mock()
+    manager.update_all_vehicles_with_cached_state = Mock()
+    manager.vehicles = []
+
+    with patch("src.hyundai.api_client.VehicleManager", return_value=manager) as vehicle_manager:
+        asyncio.run(client.initialize())
+
+    vehicle_manager.assert_called_once()
+    assert vehicle_manager.call_args.kwargs["region"] == 1
+    assert vehicle_manager.call_args.kwargs["brand"] == 2
+
+
+def test_hyundai_config_parses_named_defaults(monkeypatch):
+    """Docker compose defaults like 'EU' and 'hyundai' should parse correctly."""
+    monkeypatch.setenv("HYUNDAI_USERNAME", "test@example.com")
+    monkeypatch.setenv("HYUNDAI_PASSWORD", "test_password")
+    monkeypatch.setenv("HYUNDAI_PIN", "1234")
+    monkeypatch.setenv("HYUNDAI_REGION", "EU")
+    monkeypatch.delenv("HYUNDAI_BRAND", raising=False)
+
+    config = HyundaiConfig.from_env()
+
+    assert config.region is Region.EUROPE
+    assert config.brand is Brand.HYUNDAI
+    assert int(config.brand) == 2
+
+
 async def main():
     """Main test function."""
     setup_logging()
@@ -273,8 +313,8 @@ async def main():
     print("=" * 60)
     
     try:
-        await test_token_refresh_mechanism()
-        await test_api_client_methods()
+        await run_token_refresh_mechanism()
+        await run_api_client_methods()
         
         print("\n" + "=" * 60)
         print("All tests completed!")

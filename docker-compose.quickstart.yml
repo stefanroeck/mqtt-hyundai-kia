@@ -15,7 +15,7 @@ services:
       - HYUNDAI_PASSWORD=your_password
       - HYUNDAI_PIN=your_pin
       - HYUNDAI_REGION=1
-      - HYUNDAI_BRAND=1
+      - HYUNDAI_BRAND=2
       - MQTT_BROKER_HOST=your_mqtt_broker
       - MQTT_BROKER_PORT=1883
       - LOG_LEVEL=INFO
