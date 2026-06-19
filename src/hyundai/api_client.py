@@ -1,6 +1,7 @@
 """Hyundai API client wrapper with refresh strategies."""
 
 import asyncio
+import re
 from datetime import datetime, timedelta
 from typing import Any, Callable, List, Optional
 
@@ -93,6 +94,14 @@ class HyundaiAPIClient:
         self._token_refresh_lock: asyncio.Lock = asyncio.Lock()
         self._last_refresh_time: Optional[datetime] = None
 
+    def _is_hyundai_refresh_token_password(self) -> bool:
+        """Return true when Hyundai is configured with a refresh token as password."""
+        return (
+            self.config.brand.name == "HYUNDAI"
+            and re.fullmatch(r"[A-Z0-9]{48}", self.config.password) is not None
+        )
+
+
     async def _is_token_expired_error(self, error: Exception) -> bool:
         """Check if error indicates token expiration."""
         error_str = str(error).lower()
@@ -171,7 +180,13 @@ class HyundaiAPIClient:
 
         except Exception as e:
             logger.error(f"Failed to initialize Hyundai API client: {e}")
-            raise HyundaiAPIError(f"Initialization failed: {e}")
+            if self._is_hyundai_refresh_token_password():
+                raise HyundaiAPIError(
+                    "Initialization failed: Hyundai rejected the configured refresh token. "
+                    "Use the real Hyundai account password in HYUNDAI_PASSWORD; "
+                    "current EU Hyundai refresh tokens are not accepted by this client flow."
+                ) from e
+            raise HyundaiAPIError(f"Initialization failed: {e}") from e
 
     async def refresh_cached(self, vehicle_id: str) -> VehicleData:
         """

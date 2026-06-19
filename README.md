@@ -118,6 +118,8 @@ The service can be configured via environment variables. These work for both Doc
 - `HYUNDAI_PIN`: Your vehicle PIN (for control commands)
 - `MQTT_BROKER_HOST`: MQTT broker hostname or IP address
 
+For Hyundai Europe, `HYUNDAI_PASSWORD` should be the real Hyundai account password. Do not use a previously generated 48-character refresh token here; Hyundai currently rejects those tokens for this client flow with `Received unexpected statusCode`.
+
 #### Optional Variables
 
 ```bash

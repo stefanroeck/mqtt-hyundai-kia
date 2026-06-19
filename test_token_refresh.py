@@ -304,6 +304,32 @@ def test_hyundai_config_parses_named_defaults(monkeypatch):
     assert int(config.brand) == 2
 
 
+def test_initialize_explains_rejected_hyundai_refresh_token():
+    config = HyundaiConfig(
+        region=Region.EUROPE,
+        brand=Brand.HYUNDAI,
+        username="test@example.com",
+        password="A" * 48,
+        pin="1234"
+    )
+    client = HyundaiAPIClient(config)
+    manager = Mock()
+    manager.check_and_refresh_token = Mock(
+        side_effect=Exception("Received unexpected statusCode")
+    )
+
+    with patch("src.hyundai.api_client.VehicleManager", return_value=manager):
+        try:
+            asyncio.run(client.initialize())
+        except Exception as e:
+            message = str(e)
+        else:
+            raise AssertionError("initialize unexpectedly succeeded")
+
+    assert "Hyundai rejected the configured refresh token" in message
+    assert "real Hyundai account password" in message
+
+
 async def main():
     """Main test function."""
     setup_logging()
