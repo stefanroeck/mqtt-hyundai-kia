@@ -163,18 +163,22 @@ class AppConfig:
     mqtt: MQTTConfig
     log_level: str
     initial_refresh: bool
+    response_debug_logging: bool
 
     @staticmethod
     def from_env() -> 'AppConfig':
         """Load complete configuration from environment."""
         initial_refresh_str = os.getenv("INITIAL_REFRESH", "true").lower()
         initial_refresh = initial_refresh_str in ("true", "1", "yes")
+        response_debug_logging_str = os.getenv("RESPONSE_DEBUG_LOGGING", "true").lower()
+        response_debug_logging = response_debug_logging_str in ("true", "1", "yes")
         
         return AppConfig(
             hyundai=HyundaiConfig.from_env(),
             mqtt=MQTTConfig.from_env(),
             log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
-            initial_refresh=initial_refresh
+            initial_refresh=initial_refresh,
+            response_debug_logging=response_debug_logging,
         )
 
 

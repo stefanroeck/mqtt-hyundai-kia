@@ -136,6 +136,7 @@ MQTT_BASE_TOPIC=hyundai # Base topic for MQTT messages
 # Application Configuration
 LOG_LEVEL=INFO          # DEBUG, INFO, WARNING, ERROR
 INITIAL_REFRESH=true    # Load cached data on startup
+RESPONSE_DEBUG_LOGGING=true # Append raw vehicle responses to api_response.log
 REFRESH_INTERVAL=60     # Default refresh interval in seconds
 ```
 
