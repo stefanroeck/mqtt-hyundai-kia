@@ -1,13 +1,13 @@
 [project]
 name = "hyundai-mqtt"
-version = "0.1.0"
+version = "0.2.0"
 description = "MQTT-driven integration with Hyundai Bluelink API for battery/EV data automation"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
-    "hyundai-kia-connect-api>=4.18.0",
+    "hyundai-kia-connect-api>=4.35.0",
     "paho-mqtt>=1.6.1",
-    "python-dotenv>=1.0.0",
+    "python-dotenv>=1.2.4",
 ]
 
 [project.optional-dependencies]

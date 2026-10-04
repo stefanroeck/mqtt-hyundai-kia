@@ -56,7 +56,10 @@ class HyundaiMQTTService:
 
             # Initialize Hyundai API client
             logger.info("Initializing Hyundai API client")
-            self.api_client = HyundaiAPIClient(self.config.hyundai)
+            self.api_client = HyundaiAPIClient(
+                self.config.hyundai,
+                response_debug_logging=self.config.response_debug_logging,
+            )
             await self.api_client.initialize()
 
             # Initialize MQTT client with command callback

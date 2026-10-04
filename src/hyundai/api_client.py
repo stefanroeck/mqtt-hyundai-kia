@@ -2,7 +2,7 @@
 
 import asyncio
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, List, Optional
 
 from hyundai_kia_connect_api import VehicleManager, ClimateRequestOptions, WindowRequestOptions
@@ -51,7 +51,7 @@ class CircuitBreaker:
             # Check if timeout has elapsed
             if (
                 self.last_failure_time
-                and datetime.utcnow() - self.last_failure_time
+                and datetime.now(timezone.utc) - self.last_failure_time
                 > timedelta(seconds=self.timeout)
             ):
                 self.state = "HALF_OPEN"
@@ -72,7 +72,7 @@ class CircuitBreaker:
     def record_failure(self) -> None:
         """Record failed execution."""
         self.failure_count += 1
-        self.last_failure_time = datetime.utcnow()
+        self.last_failure_time = datetime.now(timezone.utc)
 
         if self.failure_count >= self.failure_threshold:
             self.state = "OPEN"
@@ -87,8 +87,11 @@ class HyundaiAPIClient:
     Implements refresh strategies and error handling.
     """
 
-    def __init__(self, config: HyundaiConfig) -> None:
+    def __init__(
+        self, config: HyundaiConfig, response_debug_logging: bool = True
+    ) -> None:
         self.config: HyundaiConfig = config
+        self.response_debug_logging = response_debug_logging
         self.vehicle_manager: Optional[VehicleManager] = None
         self.circuit_breaker: CircuitBreaker = CircuitBreaker()
         self._token_refresh_lock: asyncio.Lock = asyncio.Lock()
@@ -100,6 +103,21 @@ class HyundaiAPIClient:
             self.config.brand.name == "HYUNDAI"
             and re.fullmatch(r"[A-Z0-9]{48}", self.config.password) is not None
         )
+
+    def _log_vehicle_response(self, vehicle: Any, update_method: str) -> None:
+        """Append a vehicle object's raw representation to a local log file."""
+        if not self.response_debug_logging:
+            return
+
+        try:
+            with open("api_response.log", "a", encoding="utf-8") as response_log:
+                response_log.write(
+                    f"\n--- {datetime.now(timezone.utc).isoformat()} "
+                    f"vehicle={getattr(vehicle, 'id', 'unknown')} method={update_method} ---\n"
+                    f"{vehicle!r}\n"
+                )
+        except OSError as error:
+            logger.warning(f"Could not write Hyundai API response snapshot: {error}")
 
 
     async def _is_token_expired_error(self, error: Exception) -> bool:
@@ -120,7 +138,7 @@ class HyundaiAPIClient:
         async with self._token_refresh_lock:
             # Double-check pattern to avoid redundant refreshes
             if self._last_refresh_time and \
-               (datetime.utcnow() - self._last_refresh_time).seconds < 30:
+               (datetime.now(timezone.utc) - self._last_refresh_time).seconds < 30:
                 return
             
             if not self.vehicle_manager:
@@ -128,7 +146,7 @@ class HyundaiAPIClient:
             
             logger.info("Refreshing expired token")
             await asyncio.to_thread(self.vehicle_manager.check_and_refresh_token)
-            self._last_refresh_time = datetime.utcnow()
+            self._last_refresh_time = datetime.now(timezone.utc)
             logger.info("Token refresh completed successfully")
 
     async def _execute_with_retry(self, operation: Callable, *args, **kwargs) -> Any:
@@ -210,6 +228,7 @@ class HyundaiAPIClient:
             if not vehicle:
                 raise RefreshError(f"Vehicle {vehicle_id} not found")
 
+            self._log_vehicle_response(vehicle, "cached")
             self.circuit_breaker.record_success()
             return map_vehicle_data(vehicle, "cached", "cached")
 
@@ -246,6 +265,7 @@ class HyundaiAPIClient:
             if not vehicle:
                 raise RefreshError(f"Vehicle {vehicle_id} not found")
 
+            self._log_vehicle_response(vehicle, "force")
             self.circuit_breaker.record_success()
             return map_vehicle_data(vehicle, "fresh", "force")
 
@@ -313,6 +333,7 @@ class HyundaiAPIClient:
                 data_source = "cached"
                 logger.info(f"Smart refresh used cached data for vehicle {vehicle_id}")
 
+            self._log_vehicle_response(vehicle, "smart")
             self.circuit_breaker.record_success()
             return map_vehicle_data(vehicle, data_source, "smart")
 
