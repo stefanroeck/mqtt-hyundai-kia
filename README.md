@@ -205,6 +205,7 @@ python -m src.main
 
 ```
 hyundai/{vehicle_id}/battery/level
+hyundai/{vehicle_id}/battery/12v_battery_percentage
 hyundai/{vehicle_id}/battery/charging_status
 hyundai/{vehicle_id}/battery/plug_status
 hyundai/{vehicle_id}/battery/temperature
