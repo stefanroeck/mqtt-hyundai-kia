@@ -30,6 +30,7 @@ WINDOW_STATE_MAP = {
 class BatteryData:
     """Battery-related metrics from vehicle."""
     level: Optional[float] = None  # Battery percentage (0-100)
+    battery_12v_percentage: Optional[float] = None
     charging_status: Optional[str] = None  # "charging", "not_charging", etc.
     plug_status: Optional[str] = None  # "connected", "disconnected"
     temperature: Optional[float] = None  # Battery temperature in Celsius
@@ -308,6 +309,7 @@ def map_battery_data(vehicle: Any) -> BatteryData:
     """Extract battery data from hyundai_kia_connect_api vehicle object."""
     return BatteryData(
         level=getattr(vehicle, 'ev_battery_percentage', None),
+        battery_12v_percentage=getattr(vehicle, 'car_battery_percentage', None),
         charging_status=_map_charging_status(
             getattr(vehicle, 'ev_battery_is_charging', None)
         ),
