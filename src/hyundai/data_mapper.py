@@ -32,6 +32,7 @@ class BatteryData:
     level: Optional[float] = None  # Battery percentage (0-100)
     battery_12v_percentage: Optional[float] = None
     charging_status: Optional[str] = None  # "charging", "not_charging", etc.
+    charging_duration: Optional[int] = None  # Estimated current charge duration (minutes)
     plug_status: Optional[str] = None  # "connected", "disconnected"
     temperature: Optional[float] = None  # Battery temperature in Celsius
     charging_power: Optional[float] = None  # Current charging power in kW
@@ -312,6 +313,9 @@ def map_battery_data(vehicle: Any) -> BatteryData:
         battery_12v_percentage=getattr(vehicle, 'car_battery_percentage', None),
         charging_status=_map_charging_status(
             getattr(vehicle, 'ev_battery_is_charging', None)
+        ),
+        charging_duration=getattr(
+            vehicle, 'ev_estimated_current_charge_duration', None
         ),
         plug_status=_map_plug_status(
             getattr(vehicle, 'ev_battery_is_plugged_in', None)

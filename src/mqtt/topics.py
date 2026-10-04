@@ -154,8 +154,9 @@ class TopicManager:
 TOPIC_CONFIG = {
     # Existing battery and EV topics
     "battery/level": {"qos": 1, "retain": True, "unit": "%"},
-    "battery/12v_battery_percentage": {"qos": 1, "retain": True, "unit": "%"},
+    "battery/battery_12v_percentage": {"qos": 1, "retain": True, "unit": "%"},
     "battery/charging_status": {"qos": 1, "retain": True},
+    "battery/charging_duration": {"qos": 1, "retain": True, "unit": "min"},
     "battery/plug_status": {"qos": 1, "retain": True},
     "battery/temperature": {"qos": 0, "retain": False, "unit": "°C"},
     "ev/range": {"qos": 1, "retain": True, "unit": "km"},
